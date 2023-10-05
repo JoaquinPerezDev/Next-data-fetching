@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 
-function LastSalesPage() {
-	const [sales, setSales] = useState();
+function LastSalesPage(props) {
+	const [sales, setSales] = useState(props.sales);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const { data, error } = useSWR(
@@ -21,16 +21,25 @@ function LastSalesPage() {
 					volume: data[key].volume,
 				});
 			}
-      setSales(transformedSales);
+			setSales(transformedSales);
 		}
 	}, [data]);
+
 	// useEffect(() => {
 	// 	setIsLoading(true);
 	// 	fetch('https://client-side-fe-default-rtdb.firebaseio.com/sales.json')
 	// 		.then((res) => res.json())
 	// 		.then((data) => {
+	// 			const transformedSales = [];
 
-
+	// 			for (const key in data) {
+	// 				transformedSales.push({
+	// 					id: key,
+	// 					username: data[key].username,
+	// 					volume: data[key].volume,
+	// 				});
+	// 			}
+	// 			setSales(transformedSales);
 	// 			setIsLoading(false);
 	// 		});
 	// }, []);
@@ -39,7 +48,7 @@ function LastSalesPage() {
 		return <h1>Failed to Load</h1>;
 	}
 
-	if (!data || !sales) {
+	if (!data && !sales) {
 		return <p>Loading...</p>;
 	}
 
@@ -52,6 +61,25 @@ function LastSalesPage() {
 			))}
 		</ul>
 	);
+}
+
+export async function getStaticProps() {
+	const response = await fetch(
+		'https://client-side-fe-default-rtdb.firebaseio.com/sales.json'
+	);
+	const data = await response.json();
+
+	const transformedSales = [];
+
+	for (const key in data) {
+		transformedSales.push({
+			id: key,
+			username: data[key].username,
+			volume: data[key].volume,
+		});
+	}
+
+	return { props: { sales: transformedSales }, revalidate: 10 };
 }
 
 export default LastSalesPage;
